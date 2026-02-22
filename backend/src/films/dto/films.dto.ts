@@ -29,9 +29,9 @@ export class ScheduleResponseDto {
   items!: ScheduleItemDto[];
 }
 
-import { Film as FilmEntity } from '../schemas/film.schema';
+import type { FilmModel } from '../types';
 
-export const toFilmDto = (e: FilmEntity) => ({
+export const toFilmDto = (e: FilmModel) => ({
   id: e.id,
   rating: e.rating,
   director: e.director,
@@ -43,7 +43,7 @@ export const toFilmDto = (e: FilmEntity) => ({
   cover: e.cover,
 });
 
-export const toScheduleDto = (e: FilmEntity): ScheduleItemDto[] =>
+export const toScheduleDto = (e: FilmModel): ScheduleItemDto[] =>
   (e.schedule ?? []).map((s) => ({
     id: s.id,
     daytime: s.daytime,
