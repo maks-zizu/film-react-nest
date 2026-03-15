@@ -29,6 +29,7 @@ jobs:
             build_args: |
               VITE_API_URL=/api/afisha
               VITE_CDN_URL=/content/afisha
+              VITE_BASE_PATH=/
           - image_name: backend
             context: ./backend
             dockerfile: ./backend/Dockerfile
