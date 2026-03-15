@@ -1,0 +1,101 @@
+services:
+  frontend:
+    image: ghcr.io/maks-zizu/film-react-nest/frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/afisha
+        VITE_CDN_URL: /content/afisha
+    volumes:
+      - frontend_dist:/frontend-dist
+    networks:
+      - film-net
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/maks-zizu/film-react-nest/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_DRIVER: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: prac
+      DATABASE_USERNAME: prac
+      DATABASE_PASSWORD: prac
+      LOGGER_TYPE: json
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - film-net
+    restart: unless-stopped
+
+  nginx:
+    image: ghcr.io/maks-zizu/film-react-nest/nginx:latest
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    ports:
+      - '80:80'
+    volumes:
+      - frontend_dist:/usr/share/nginx/html:ro
+    networks:
+      - film-net
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: prac
+      POSTGRES_USER: prac
+      POSTGRES_PASSWORD: prac
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/test/prac.schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/test/prac.films.sql:/docker-entrypoint-initdb.d/02-films.sql:ro
+      - ./backend/test/prac.shedules.sql:/docker-entrypoint-initdb.d/03-schedules.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U prac -d prac']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - film-net
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '8080:80'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - film-net
+    restart: unless-stopped
+
+volumes:
+  frontend_dist:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  film-net:
+    driver: bridge

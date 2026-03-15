@@ -32,5 +32,41 @@ MongoDB должна быть установлена и запущена.
 Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
 
 
+## Docker Compose (production-like)
+
+В репозитории добавлены:
+
+* `frontend/Dockerfile` — сборка фронтенда и копирование `dist` в volume.
+* `backend/Dockerfile` — сборка и запуск NestJS из `dist/main.js`.
+* `nginx/Dockerfile` + `nginx/default.conf` — раздача фронтенда и проксирование `/api/` и `/content/`.
+* `docker-compose.yml` — запуск фронтенда, бэкенда, PostgreSQL и pgAdmin в одной сети.
+
+Запуск:
+
+```bash
+docker compose up -d --build
+```
+
+Проверка:
+
+* Приложение: `http://localhost:80`
+* pgAdmin: `http://localhost:8080`
+  * Login: `admin@admin.com`
+  * Password: `admin`
+
+Остановка:
+
+```bash
+docker compose down
+```
+
+
+## GHCR Build & Publish
+
+Добавлен workflow `.github/workflows/docker-images.yml`, который:
+
+* поднимает Buildx (`docker/setup-buildx-action@v3`);
+* собирает образы `frontend`, `backend`, `nginx`;
+* публикует их в `ghcr.io` через `GITHUB_TOKEN`.
 
 
