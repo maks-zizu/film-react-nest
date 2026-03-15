@@ -15,7 +15,7 @@ import { DatabaseModule } from './db/database.module';
       rootPath: path.join(process.cwd(), 'public', 'content', 'afisha'),
       serveRoot: '/content/afisha',
     }),
-    DatabaseModule,
+    DatabaseModule.register(),
     FilmsModule,
     OrderModule,
   ],
