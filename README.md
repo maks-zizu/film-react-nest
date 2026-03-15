@@ -70,3 +70,24 @@ docker compose down
 * публикует их в `ghcr.io` через `GITHUB_TOKEN`.
 
 
+## Продакшен
+
+* Фронтенд: `http://film.frontend.nomorepartiessite.ru`
+* Бэкенд API: `http://film.backend.nomorepartiessite.ru/api/afisha/films`
+* pgAdmin: `http://film.backend.nomorepartiessite.ru:8080` (на время наполнения БД)
+
+
+## Continuous Delivery
+
+Добавлен workflow `.github/workflows/deploy-server.yml`:
+
+* запускается после успешного `Build and Publish Docker Images` (или вручную);
+* подключается к серверу по SSH;
+* делает `docker compose pull` и `docker compose up -d` для `frontend/backend/nginx`.
+
+Нужные Secrets в GitHub:
+
+* `DEPLOY_HOST` — IP или домен сервера.
+* `DEPLOY_USER` — SSH-пользователь на сервере.
+* `DEPLOY_SSH_KEY` — приватный SSH-ключ для доступа к серверу.
+
