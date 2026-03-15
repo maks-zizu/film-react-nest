@@ -1,0 +1,76 @@
+name: Build and Publish Docker Images
+
+on:
+  push:
+    branches:
+      - main
+      - review-3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_name: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+            build_args: |
+              VITE_API_URL=/api/afisha
+              VITE_CDN_URL=/content/afisha
+              VITE_BASE_PATH=/
+          - image_name: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            build_args: ''
+          - image_name: nginx
+            context: ./nginx
+            dockerfile: ./nginx/Dockerfile
+            build_args: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.image_name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ matrix.build_args }}

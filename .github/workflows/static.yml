@@ -34,6 +34,7 @@ jobs:
       - name: Build frontend
         run: npm run build --prefix frontend
         env:
+          VITE_BASE_PATH: /film-react-nest/
           VITE_API_URL: https://stub.practicum-team.ru/api/afisha
           VITE_CDN_URL: https://stub.practicum-team.ru/content/afisha
 
